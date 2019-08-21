@@ -1,4 +1,4 @@
-# Smart Smooth Scrolling
+# Mouse Scroll Scrolling
 
 Lightweight vanilla smooth scrolling based on native browser scrollbar. 
 
