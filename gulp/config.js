@@ -18,7 +18,7 @@ module.exports = {
 	webpack: {
 		mode: argv.production ? 'production' : 'development',
 		entry: {
-			"index": src + 'lib/SmoothScroll.js',
+			// "index": src + 'lib/SmoothScroll.js',
 			"demo/js/script": src + 'demo/Main.js',
 		},
 		output: {

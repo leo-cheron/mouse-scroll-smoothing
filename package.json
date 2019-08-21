@@ -1,12 +1,12 @@
 {
   "name": "mouse-scroll-smoothing",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Smooth scrolling based on native browser scrollbar",
   "repository": {
     "type" : "git",
     "url" : "https://github.com/mrgnou/mouse-scroll-smoothing.git"
   },
-  "main": "index.js",
+  "main": "src/lib/SmoothScroll.js",
   "engines": {
     "node": ">= 8.0.0"
   },
