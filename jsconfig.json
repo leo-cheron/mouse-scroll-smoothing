@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "module": "es6",
+        "experimentalDecorators": true,
+        "baseUrl": "./src",
+        "paths": {
+            "*": ["src/js/*"]
+        },
+    },
+    "exclude": [
+        ".idea",
+        "node_modules",
+        "**/node_modules/*",
+        "misc",
+        "deploy",
+        "public"
+    ],
+    "include": [
+        "src/**/*"
+    ]
+}
