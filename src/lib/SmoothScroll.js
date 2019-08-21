@@ -29,6 +29,10 @@ export default class SmoothScroll
 		this._deltaArray = [0, 0, 0];
 		this._isStopped = true;
 
+		this._onScroll = this._onScroll.bind(this);
+		this._onTouchStart = this._onTouchStart.bind(this);
+		this._onMouseWheel = this._onMouseWheel.bind(this);
+
 		this._scrollify();
 	}
 
@@ -69,6 +73,7 @@ export default class SmoothScroll
 
 		window.removeEventListener('scroll', this._onScroll);
 		this.dom.removeEventListener(this._wheelEvent, this._onMouseWheel);
+		this.dom.removeEventListener('touchstart', this._onTouchStart);
 	}
 
 	reset()
@@ -190,7 +195,6 @@ export default class SmoothScroll
 
 	//-----------------------------------------------------o handlers
 
-	@autobind
 	_onMouseWheel(e)
 	{
 		if(!this._mode || this._mode == 'touch')
@@ -216,14 +220,12 @@ export default class SmoothScroll
 		this._analyzeArray(deltaY);
 	}
 
-	@autobind
 	_onTouchStart(e)
 	{
 		this._dragging = false;
 		this._mode = "touch";
 	}
 
-	@autobind
 	_onScroll(e)
 	{
 		// user is dragging the scroll thumb
