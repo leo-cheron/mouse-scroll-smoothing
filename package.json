@@ -1,6 +1,6 @@
 {
-  "name": "smart-smooth-scroll",
-  "version": "1.0.0",
+  "name": "mouse-scroll-smoothing",
+  "version": "0.1.0",
   "description": "Smooth scrolling based on native browser scrollbar",
   "main": "index.js",
   "engines": {
@@ -21,18 +21,10 @@
     "babel-loader": "^8.0.6",
     "browser-sync": "^2.26.7",
     "debounce": "^1.2.0",
-    "dotenv": "^8.1.0",
     "fontfaceobserver": "^2.1.0",
-    "fs-extra": "^8.1.0",
     "gulp": "^4.0.2",
-    "gulp-filter": "*",
-    "gulp-rename": "^1.4.0",
-    "gulp-replace": "^1.0.0",
     "gulp-util": "^3.0.8",
-    "gulp-watch": "^5.0.1",
-    "lazypipe": "^1.0.2",
     "terser-webpack-plugin": "^1.4.1",
-    "vinyl-source-stream": "^2.0.0",
     "webpack": "^v4.39.2",
     "yargs": "^14.0.0"
   }

@@ -1,7 +1,6 @@
-let path = require('path'),
-	fs = require('fs-extra');
-
-let gulp = require('gulp');
+const path = require('path');
+const fs = require('fs');
+const gulp = require('gulp');
 
 // import all tasks
 fs.readdirSync('./tasks/').forEach(function(task) 
