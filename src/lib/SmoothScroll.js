@@ -18,7 +18,7 @@ export default class SmoothScroll
 		this.y = this._y = 0;
 		
 		const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-		this._easing = isFirefox ? 0.35 : 0.13;
+		this._easing = isFirefox ? 0.35 : 0.1;
 		this._frictionTouchRelease = 0.95;
 		this._ratio = this.options.ratio || 1;
 
@@ -27,11 +27,8 @@ export default class SmoothScroll
 		this._enabled = true;
 
 		this._deltaArray = [0, 0, 0];
+		this._direction = 1;
 		this._isStopped = true;
-
-		this._onScroll = this._onScroll.bind(this);
-		this._onTouchStart = this._onTouchStart.bind(this);
-		this._onMouseWheel = this._onMouseWheel.bind(this);
 
 		this._scrollify();
 	}
@@ -73,7 +70,6 @@ export default class SmoothScroll
 
 		window.removeEventListener('scroll', this._onScroll);
 		this.dom.removeEventListener(this._wheelEvent, this._onMouseWheel);
-		this.dom.removeEventListener('touchstart', this._onTouchStart);
 	}
 
 	reset()
@@ -195,6 +191,7 @@ export default class SmoothScroll
 
 	//-----------------------------------------------------o handlers
 
+	@autobind
 	_onMouseWheel(e)
 	{
 		if(!this._mode || this._mode == 'touch')
@@ -204,12 +201,17 @@ export default class SmoothScroll
 
 		const deltaY = event.wheelDelta && !event.deltaY ? -event.wheelDelta : event.deltaY;
 
+		const direction = deltaY > 0 ? 1 : -1;
+		if(direction !== this._direction)
+			this._deltaArray = [0, 0, 0];
+		this._direction = direction;
+
 		clearTimeout(this._timer);
 		this._timer = setTimeout(() => 
 		{
             this._deltaArray = [0, 0, 0];
             this._isStopped = true;
-		}, 150);
+		}, 120);
 
 		if(this._isStopped) 
 		{
@@ -217,15 +219,18 @@ export default class SmoothScroll
 			if(this._wheelAcceleration) this._mode = 'mouse';
 			this._wheelAcceleration = true;
 		}
+
 		this._analyzeArray(deltaY);
 	}
 
+	@autobind
 	_onTouchStart(e)
 	{
 		this._dragging = false;
 		this._mode = "touch";
 	}
 
+	@autobind
 	_onScroll(e)
 	{
 		// user is dragging the scroll thumb
