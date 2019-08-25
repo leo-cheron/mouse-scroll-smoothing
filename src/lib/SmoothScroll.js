@@ -1,7 +1,7 @@
 import detectPassiveEvents from "detect-passive-events";
 
 /**
- * Smooth scroll
+ * Smooth scrolling
  * @author Léo Chéron
  */
 export default class SmoothScroll
@@ -11,41 +11,55 @@ export default class SmoothScroll
 		this.dom = dom;
 		this.options = options;
 
+		this.options.autoResize = this.options.autoResize != undefined ? this.options.autoResize : true;
+		this.options.autoRaf = this.options.autoRaf != undefined ? this.options.autoRaf : true;
+
 		// physics
-		this.vy = 0;
-		this.percent = 0;
 		this.x = 0;
 		this.y = this._y = 0;
+		this.vy = 0;
 		
-		const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-		this._easing = isFirefox ? 0.35 : 0.1;
-		this._frictionTouchRelease = 0.95;
-		this._ratio = this.options.ratio || 1;
-
-		this._firstScroll = true;
+		this._percent = 0;
 
 		this._enabled = true;
+		this._firstScroll = true;
+		
+		const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+		this._easing = isFirefox ? (this.options.easingFf || 0.35) : (this.options.easing || 0.1);
 
+		// trackad detection
 		this._deltaArray = [0, 0, 0];
 		this._direction = 1;
 		this._isStopped = true;
 
+		// autobinding
+		this._onScroll = this._onScroll.bind(this);
+		this._onTouchStart = this._onTouchStart.bind(this);
+		this._onMouseWheel = this._onMouseWheel.bind(this);
+		
 		this._scrollify();
+		
+		if(this.options.autoRaf)
+		{
+			this._tick = this._tick.bind(this);
+			this._tick();
+		}
 	}
 
-	resize(boundingHeight)
+	resize(wh)
 	{
-		this.height = this.dom.getBoundingClientRect().height;
-		this.boundingHeight = boundingHeight || window.innerHeight;
+		this.height = this.dom.offsetHeight;
+		this.wh = wh || window.innerHeight;
 
 		this.update(true);
 	}
 
-	update(now = false)
+	update(now)
 	{
 		if(this.enabled)
 		{
-			if(!this._dragging && (now || this._mode == 'touch' || this._mode == 'trackpad'))
+			if(now || 
+			  (!this._dragging && (this._mode == 'touch' || this._mode == 'trackpad')))
 			{
 				this.y = this._y;
 				this.vy = 0;
@@ -57,9 +71,9 @@ export default class SmoothScroll
 			}
 		}
 
-		this.percent = this.y / (this.height - this.boundingHeight);
+		this._percent = this.y / (this.height - this.wh);
 
-		if(!this.preventDomUpdate || now)
+		if(now || !this.preventDomUpdate)
 			this._updateDom();
 	}
 
@@ -69,7 +83,9 @@ export default class SmoothScroll
 			this._dummy.parentNode.removeChild(this._dummy);
 
 		window.removeEventListener('scroll', this._onScroll);
+
 		this.dom.removeEventListener(this._wheelEvent, this._onMouseWheel);
+		this.dom.removeEventListener('touchstart', this._onTouchStart);
 	}
 
 	reset()
@@ -87,20 +103,20 @@ export default class SmoothScroll
 		if(!value)
 		{
 			if(this._dummy)
-				this._dummy.style.display = "none";
+				this._dummy.style.display = 'none';
 			
 			// this.dom.style.willChange = '';
 		}
 		else
 		{
-			// this.dom.style.willChange = "transform";
+			// this.dom.style.willChange = 'transform';
 			
 			if(this._dummy)
 				this._dummy.style.display = '';
 
 			window.scrollTo(0, this.y);
 
-			this.resize();
+			this.resize(this.wh);
 		}
 	}
 
@@ -114,7 +130,7 @@ export default class SmoothScroll
 		this._height = value;
 
 		if(this._dummy)
-			this._dummy.style.height = this._height + "px";
+			this._dummy.style.height = this._height + 'px';
 	}
 
 	get height()
@@ -122,7 +138,22 @@ export default class SmoothScroll
 		return this._height;
 	}
 
+	get percent()
+	{
+		return this._percent;
+	}
+
 	//-----------------------------------------------------o private
+
+	_tick()
+	{
+		this.update();
+
+		if(this.options.rafCallback) 
+			this.options.rafCallback(this._percent);
+
+		window.requestAnimationFrame(this._tick);
+	}
 
 	_updateDom()
 	{
@@ -130,7 +161,7 @@ export default class SmoothScroll
 
 		if(y !== this._oy)
 		{
-			let translate = "translate3d(" + this.x + "px," + -y + "px,0)";
+			let translate = `translate3d(${this.x}px,${-y}px,0)`;
 			this.dom.style.transform = translate;
 		}
 		
@@ -140,15 +171,16 @@ export default class SmoothScroll
 	_scrollify()
 	{
 		// update dom to make things work
-		this.dom.style.position = "fixed";
-		// this.dom.style.willChange = "transform";
+		this.dom.style.position = 'fixed';
+		// this.dom.style.willChange = 'transform';
 
-		this._dummy = document.createElement("div");
-		this._dummy.style.position = "absolute";
+		this._dummy = document.createElement('div');
+		this._dummy.style.position = 'absolute';
 		this._dummy.style.top = 0;
 		this._dummy.style.left = 0;
-		this._dummy.style.width = "1px";
-		this._dummy.style.visibility = "hidden";
+		this._dummy.style.width = '1px';
+		this._dummy.style.height = this.dom.offsetHeight + 'px';
+		this._dummy.style.visibility = 'hidden';
 		this.dom.parentNode.appendChild(this._dummy);
 
 		// events
@@ -156,12 +188,18 @@ export default class SmoothScroll
 
 		window.addEventListener('scroll', this._onScroll, passive);
 
-		this._wheelEvent = "onwheel" in document.createElement("div") ? "wheel" : // Modern browsers support "wheel"
-							document.onmousewheel !== undefined ? "mousewheel" : // Webkit and IE support at least "mousewheel"
-							"DOMMouseScroll"; // let's assume that remaining browsers are older Firefox
+		this._wheelEvent = 'onwheel' in document.createElement('div') ? 'wheel' : // Modern browsers support 'wheel'
+							document.onmousewheel !== undefined ? 'mousewheel' : // Webkit and IE support at least 'mousewheel'
+							'DOMMouseScroll'; // let's assume that remaining browsers are older Firefox
 
 		this.dom.addEventListener(this._wheelEvent, this._onMouseWheel, passive);
 		this.dom.addEventListener('touchstart', this._onTouchStart, passive);
+
+		if(this.options.autoResize)
+		{
+			window.addEventListener('resize', this.resize.bind(this), passive);
+			this.resize();
+		}
 	}
 
 	_analyzeArray(deltaY) 
@@ -191,7 +229,6 @@ export default class SmoothScroll
 
 	//-----------------------------------------------------o handlers
 
-	@autobind
 	_onMouseWheel(e)
 	{
 		if(!this._mode || this._mode == 'touch')
@@ -223,14 +260,12 @@ export default class SmoothScroll
 		this._analyzeArray(deltaY);
 	}
 
-	@autobind
 	_onTouchStart(e)
 	{
 		this._dragging = false;
 		this._mode = "touch";
 	}
 
-	@autobind
 	_onScroll(e)
 	{
 		// user is dragging the scroll thumb
@@ -239,7 +274,7 @@ export default class SmoothScroll
 
 		if(this.enabled)
 		{
-			this._y = this.thumb ? Math.round(this.thumb.percent * (this.height - this.boundingHeight)) : window.scrollY || window.pageYOffset;
+			this._y = window.pageYOffset;
 
 			if(this._firstScroll)
 			{

@@ -14,14 +14,21 @@ class Main
 	{
 		document.removeEventListener("DOMContentLoaded", this._onDomContentLoaded);
 
-		this._smoothScroll = new SmoothScroll(document.querySelector('.scrollable'));
+		this._smoothScroll = new SmoothScroll(document.querySelector('.scrollable'), {
+			easing: 0.1,
+			easingFf: 0.35,
+			autoResize: false,
+			autoRaf: false,
+			rafCallback: () => {
+				//
+			},
+		});
 
 		window.addEventListener("resize", debounce(this._onResize, 100));
 
 		Promise.all([new FontFaceObserver('Playfair Display').load(), new FontFaceObserver('Source Sans Pro').load()]).then(() =>
 		{
-			if(this._smoothScroll)
-				this._smoothScroll.resize();
+			this._smoothScroll.resize();
 		});
 		
 		this._update();
@@ -30,8 +37,7 @@ class Main
 	@autobind
 	_update()
 	{
-		if(this._smoothScroll)
-			this._smoothScroll.update();
+		this._smoothScroll.update();
 		
 		window.requestAnimationFrame(this._update);
 	}
@@ -41,8 +47,7 @@ class Main
 	@autobind
 	_onResize()
 	{
-		if(this._smoothScroll)
-			this._smoothScroll.resize();
+		this._smoothScroll.resize();
 	}
 }
 
