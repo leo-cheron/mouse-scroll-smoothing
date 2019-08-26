@@ -11,8 +11,9 @@ export default class SmoothScroll
 		this.dom = dom;
 		this.options = options;
 
-		this.options.autoResize = this.options.autoResize != undefined ? this.options.autoResize : true;
-		this.options.autoRaf = this.options.autoRaf != undefined ? this.options.autoRaf : true;
+		if(this.options.autoResize === undefined) this.options.autoResize = true;
+		if(this.options.autoRaf === undefined) this.options.autoRaf = true;
+		if(this.options.disablePointerEvents === undefined) this.options.disablePointerEvents = true;
 
 		// physics
 		this.x = 0;
@@ -68,6 +69,21 @@ export default class SmoothScroll
 			{
 				this.y += (this._y - this.y) * this._easing;
 				this.vy = this._y - this.y;
+			}
+
+			// disable pointer events while scrolling
+			if(this.options.disablePointerEvents)
+			{
+				if(!this._pointerDisabled && Math.abs(this.vy) > 10)
+				{
+					this._pointerDisabled = true;
+					this.dom.style.pointerEvents = 'none';
+				}
+				else if(this._pointerDisabled && Math.abs(this.vy) <= 10)
+				{
+					this._pointerDisabled = false;
+					this.dom.style.pointerEvents = '';
+				}
 			}
 		}
 
