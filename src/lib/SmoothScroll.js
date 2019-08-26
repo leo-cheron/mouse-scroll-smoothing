@@ -83,9 +83,13 @@ export default class SmoothScroll
 			this._dummy.parentNode.removeChild(this._dummy);
 
 		window.removeEventListener('scroll', this._onScroll);
+		if(this.options.autoResize)
+			window.removeEventListener('resize', this.resize);
 
 		this.dom.removeEventListener(this._wheelEvent, this._onMouseWheel);
 		this.dom.removeEventListener('touchstart', this._onTouchStart);
+
+		this.options.autoRaf = false;
 	}
 
 	reset()
@@ -152,7 +156,8 @@ export default class SmoothScroll
 		if(this.options.rafCallback) 
 			this.options.rafCallback(this._percent);
 
-		window.requestAnimationFrame(this._tick);
+		if(this.options.autoRaf)
+			window.requestAnimationFrame(this._tick);
 	}
 
 	_updateDom()
@@ -197,7 +202,8 @@ export default class SmoothScroll
 
 		if(this.options.autoResize)
 		{
-			window.addEventListener('resize', this.resize.bind(this), passive);
+			this.resize = this.resize.bind(this);
+			window.addEventListener('resize', this.resize, passive);
 			this.resize();
 		}
 	}
